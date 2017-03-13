@@ -17,6 +17,10 @@
         <url-pattern>/MainSearchPage</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+        <servlet-name>MainSearchPage</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>ResultsPage</servlet-name>
         <url-pattern>/ResultsPage</url-pattern>
     </servlet-mapping>

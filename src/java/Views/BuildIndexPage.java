@@ -31,6 +31,8 @@ public class BuildIndexPage extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        String fullyQualifiedResourcePath = "/Users/brettwalker/workspace/EclipseJava/Lucene-Search-Engine";
+        
         SearchEngine se = new SearchEngine();
         
         response.setContentType("text/html;charset=UTF-8");
@@ -44,10 +46,8 @@ public class BuildIndexPage extends HttpServlet {
             out.println("<body>");
             out.println("<h1>Search Engine Indexing Status</h1>");
             
-            ServletContext context = request.getContext();
-          URL resourceUrl = context.getResource("/WEB-INF/test/foo.txt");
-
             se.indexCorpus("index", out);
+            
             out.println("</body>");
             out.println("</html>");
         }

@@ -70,6 +70,9 @@ public class SearchEngine {
 	final private  String INDEX_METRIC_UNIQUE_KEY = "uniqueKeyCount";
 	final private  String INDEX_METRIC_DOC_CT_KEY = "numberOfDocsRead";
 	final private  String INDEX_METRIC_UNPARSABLE_CT = "numberOfUnparsableFiles";
+        
+        /*Need to set this when using a new computer*/
+	final private  String PROJECT_FILE_LOCATION = "/Users/brettwalker/workspace/EclipseJava/Lucene-Search-Engine/";
 	
 	private enum operation { INDEX, SEARCH, PRINT_INDEX, PRINT_METRICS }  
 	private int numberOfUnparsableFiles = 0;
@@ -126,7 +129,7 @@ public class SearchEngine {
 
                 try{
                     Directory index = null;
-                    File indexFile = new File(indexLocation);
+                    File indexFile = new File(PROJECT_FILE_LOCATION + indexLocation);
                      
                     out.println("This is our index location: " + indexFile.getAbsolutePath());
                     
@@ -150,7 +153,7 @@ public class SearchEngine {
                         IndexWriter w = new IndexWriter(index, config);
                         
                         //Loading our courpus guide
-                        File bookKeeping = new File("WEBPAGES_RAW/bookkeeping.json");
+                        File bookKeeping = new File(PROJECT_FILE_LOCATION + "WEBPAGES_RAW/bookkeeping.json");
                         JSONObject jsonObj = new JSONObject(String.join("", Files.readAllLines(bookKeeping.toPath(), StandardCharsets.UTF_8)));
                         
                         File inputFile = null;
@@ -163,9 +166,9 @@ public class SearchEngine {
                             // Traverse our bookeeping JSON file that has all of the paths of the files for us to index
                             for(int i = 0; i < nameArr.length() && (i < REAL_FILE_INDEX_LIMIT || REAL_FILE_INDEX_LIMIT == -1); i++)
                             {
-                                out.println("\nCurrently Parsing #" + (i + 1) + " : WEBPAGES_RAW/" + (String)nameArr.get(i) + (GET_CONTENT_URL ? " -- This is the URL: " + jsonObj.getString((String)nameArr.get(i)) : ""));
+//                                out.println("<br>Currently Parsing #" + (i + 1) + " : WEBPAGES_RAW/" + (String)nameArr.get(i) + (GET_CONTENT_URL ? " -- This is the URL: " + jsonObj.getString((String)nameArr.get(i)) : ""));
                                 
-                                inputFile = new File("WEBPAGES_RAW/" + (String)nameArr.get(i));
+                                inputFile = new File(PROJECT_FILE_LOCATION + "WEBPAGES_RAW/" + (String)nameArr.get(i));
                                 
                                 try{
                                     
