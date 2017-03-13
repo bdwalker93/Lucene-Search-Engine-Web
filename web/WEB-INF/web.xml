@@ -8,6 +8,10 @@
         <servlet-name>ResultsPage</servlet-name>
         <servlet-class>Views.ResultsPage</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>BuildIndexPage</servlet-name>
+        <servlet-class>Views.BuildIndexPage</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>MainSearchPage</servlet-name>
         <url-pattern>/MainSearchPage</url-pattern>
@@ -15,6 +19,10 @@
     <servlet-mapping>
         <servlet-name>ResultsPage</servlet-name>
         <url-pattern>/ResultsPage</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>BuildIndexPage</servlet-name>
+        <url-pattern>/BuildIndexPage</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

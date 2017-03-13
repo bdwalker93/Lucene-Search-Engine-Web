@@ -4,6 +4,7 @@ import java.io.File;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -11,6 +12,8 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -72,123 +75,148 @@ public class SearchEngine {
 	private int numberOfUnparsableFiles = 0;
 	
 	public static void main(String[] args) throws IOException, ParseException, Exception{		 		
-		SearchEngine se = new SearchEngine();
-		Directory index = null;
-
-		operation op = operation.INDEX;
-//		operation op = operation.SEARCH;
-		
-		File indexFile = new File(REAL_INDEX);
-		 
-		 //Check to make sure the index directory exists
-		 if(!indexFile.isDirectory())
-		 {
-			indexFile.mkdir(); 
-		 }
-		
-		 
-		 index = new SimpleFSDirectory(indexFile.toPath());	
-		 
-		 switch(op){
-			 case INDEX:
-				 se.indexCorpus(index);
-				 System.out.println("***INDEXING COMPLETE***");
-				 se.printInvertedIndex(index, PRINT_INDEX_TO_SCREEN, PRINT_INDEX_TO_FILE);
-
-				 break;
-				 
-			 case SEARCH:
-				 se.searchIndex(index);
-				 break;
-				 
-			 case PRINT_INDEX:
-				 se.printInvertedIndex(index, PRINT_INDEX_TO_SCREEN, PRINT_INDEX_TO_FILE);
-				 break;
-				 
-			 case PRINT_METRICS:
-				 se.printIndexMetrics(index, PRINT_METRIC_TO_SCREEN, PRINT_METRIC_TO_FILE);
-				 break;
-				 
-			default:
-				System.out.println("UNKNOWN OPERATION");
-			 
-		 }
-		 
-  
-		 index.close();
+//		SearchEngine se = new SearchEngine();
+//		Directory index = null;
+//
+//		operation op = operation.INDEX;
+////		operation op = operation.SEARCH;
+//		
+//		File indexFile = new File(REAL_INDEX);
+//		 
+//		 //Check to make sure the index directory exists
+//		 if(!indexFile.isDirectory())
+//		 {
+//			indexFile.mkdir(); 
+//		 }
+//		
+//		 
+//		 index = new SimpleFSDirectory(indexFile.toPath());	
+//		 
+//		 switch(op){
+//			 case INDEX:
+//				 se.indexCorpus(index);
+//				 System.out.println("***INDEXING COMPLETE***");
+//				 se.printInvertedIndex(index, PRINT_INDEX_TO_SCREEN, PRINT_INDEX_TO_FILE);
+//
+//				 break;
+//				 
+//			 case SEARCH:
+//				 se.searchIndex(index);
+//				 break;
+//				 
+//			 case PRINT_INDEX:
+//				 se.printInvertedIndex(index, PRINT_INDEX_TO_SCREEN, PRINT_INDEX_TO_FILE);
+//				 break;
+//				 
+//			 case PRINT_METRICS:
+//				 se.printIndexMetrics(index, PRINT_METRIC_TO_SCREEN, PRINT_METRIC_TO_FILE);
+//				 break;
+//				 
+//			default:
+//				System.out.println("UNKNOWN OPERATION");
+//			 
+//		 }
+//		 
+//  
+//		 index.close();
 	}
 	
-	public void indexCorpus(Directory index){
-		StandardAnalyzer analyzer = new StandardAnalyzer();  
-		IndexWriterConfig config = new IndexWriterConfig(analyzer);
-		//Sets how we handles an existing index
-		config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
-		 		 
-		try{																					
-			 
-			 IndexWriter w = new IndexWriter(index, config);				
-			 
-			 //Loading our courpus guide
-			 File bookKeeping = new File("WEBPAGES_RAW/bookkeeping.json"); 
-			 JSONObject jsonObj = new JSONObject(String.join("", Files.readAllLines(bookKeeping.toPath(), StandardCharsets.UTF_8)));
-			 
-			 File inputFile = null;
-			 			 
-			 //THIS CHECK IS ONLY FOR DEVELOPMENT
-			 if(USE_REAL_FILES)
-			 {
-				 JSONArray nameArr = jsonObj.names();
-				 
-				 // Traverse our bookeeping JSON file that has all of the paths of the files for us to index
-				 for(int i = 0; i < nameArr.length() && (i < REAL_FILE_INDEX_LIMIT || REAL_FILE_INDEX_LIMIT == -1); i++)
-				 {
-					 System.out.println("\nCurrently Parsing #" + (i + 1) + " : WEBPAGES_RAW/" + (String)nameArr.get(i) + (GET_CONTENT_URL ? " -- This is the URL: " + jsonObj.getString((String)nameArr.get(i)) : ""));
-					 
-					 inputFile = new File("WEBPAGES_RAW/" + (String)nameArr.get(i));
-					 
-					 try{
-						 
-						 if(addDoc(w, jsonObj.getString((String)nameArr.get(i)), inputFile) == -1)
-						 {
-							 numberOfUnparsableFiles++;
-						 }
-					 }
-					 //catch(IllegalArgumentException e)
-					 catch(Exception e)
-					 {
-						 System.out.println("***ILLEGAL ARGUMENTS FOUND***: " + e.getMessage());
-						 numberOfUnparsableFiles++;
-					 }
-				 }
-			 }
-			 else
-			 {
-				 //***TEST CODE***
-//				 inputFile = new File("SampleTextDoc.txt"); 
+	public void indexCorpus(String indexLocation, PrintWriter out){
+		out.println("***Beginning Indexing***<br>");
+
+                try{
+                    Directory index = null;
+                    File indexFile = new File(indexLocation);
+                     
+                    out.println("This is our index location: " + indexFile.getAbsolutePath());
+                    
+                    //Check to make sure the index directory exists
+                    if(!indexFile.isDirectory())
+                    {
+                        indexFile.mkdir();
+                    }
+                    
+                    
+                    index = new SimpleFSDirectory(indexFile.toPath());
+                    
+                    StandardAnalyzer analyzer = new StandardAnalyzer();
+                    IndexWriterConfig config = new IndexWriterConfig(analyzer);
+                    
+                    //Sets how we handles an existing index
+                    config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
+                    
+                    try{
+                        
+                        IndexWriter w = new IndexWriter(index, config);
+                        
+                        //Loading our courpus guide
+                        File bookKeeping = new File("WEBPAGES_RAW/bookkeeping.json");
+                        JSONObject jsonObj = new JSONObject(String.join("", Files.readAllLines(bookKeeping.toPath(), StandardCharsets.UTF_8)));
+                        
+                        File inputFile = null;
+                        
+                        //THIS CHECK IS ONLY FOR DEVELOPMENT
+                        if(USE_REAL_FILES)
+                        {
+                            JSONArray nameArr = jsonObj.names();
+                            
+                            // Traverse our bookeeping JSON file that has all of the paths of the files for us to index
+                            for(int i = 0; i < nameArr.length() && (i < REAL_FILE_INDEX_LIMIT || REAL_FILE_INDEX_LIMIT == -1); i++)
+                            {
+                                out.println("\nCurrently Parsing #" + (i + 1) + " : WEBPAGES_RAW/" + (String)nameArr.get(i) + (GET_CONTENT_URL ? " -- This is the URL: " + jsonObj.getString((String)nameArr.get(i)) : ""));
+                                
+                                inputFile = new File("WEBPAGES_RAW/" + (String)nameArr.get(i));
+                                
+                                try{
+                                    
+                                    if(addDoc(w, jsonObj.getString((String)nameArr.get(i)), inputFile) == -1)
+                                    {
+                                        numberOfUnparsableFiles++;
+                                    }
+                                }
+                                //catch(IllegalArgumentException e)
+                                catch(Exception e)
+                                {
+                                    out.println("***ILLEGAL ARGUMENTS FOUND***: " + e.getMessage());
+                                    numberOfUnparsableFiles++;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            //***TEST CODE***
+//				 inputFile = new File("SampleTextDoc.txt");
 //				 addDoc(w, "www1", inputFile);
-//				 
+//
 //				 inputFile = new File("secondSampleTextDoc.txt"); 
 //				 addDoc(w, "www2", inputFile);
-//				 
+//
 //				 inputFile = new File("WEBPAGES_RAW/0/189"); 
 //				 addDoc(w, "www2", inputFile);
 //				 
 //				 //crista lopes home page
 //				 inputFile = new File("WEBPAGES_RAW/51/46"); 
 //				 addDoc(w, "www2", inputFile);
-				 
-				 //for crista lopes new article
-				 inputFile = new File("WEBPAGES_RAW/57/392"); 
-				 addDoc(w, "www2", inputFile);
-			 }
-	
-			 
-			//Close or commit IndexWriter to push changes for IndexReader
-			 w.close();	
+                            
+                            //for crista lopes new article
+                            inputFile = new File("WEBPAGES_RAW/57/392");
+                            addDoc(w, "www2", inputFile);
+                        }
+                        
+                        
+                        //Close or commit IndexWriter to push changes for IndexReader
+                        w.close();
+                    }
+                    catch (Exception e) {
+                        out.println("There was some exception thrown during indexing: " + e.getMessage());
+                    }
+                }
+		catch (IOException ex) {
+                        out.println("Index File IOException");
 		}
-		catch (Exception e) {
-			System.out.println("There was some exception thrown during indexing: " + e.getStackTrace());
-		}
+                
+                
+                out.println("<br>***Indexing Complete***");
 	}
 	
 	/* Reads user input to get search string
