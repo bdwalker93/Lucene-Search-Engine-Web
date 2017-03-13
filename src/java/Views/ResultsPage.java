@@ -1,3 +1,5 @@
+package Views;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -15,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author brettwalker
  */
-public class MainSearch extends HttpServlet {
+public class ResultsPage extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -34,10 +36,10 @@ public class MainSearch extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet MainSearch</title>");            
+            out.println("<title>Servlet ResultsPage</title>");            
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet MainSearch at " + request.getContextPath() + "</h1>");
+            out.println("This is our query value: " + request.getParameter("query"));
             out.println("</body>");
             out.println("</html>");
         }
@@ -69,7 +71,7 @@ public class MainSearch extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+//        processRequest(request, response);
     }
 
     /**
