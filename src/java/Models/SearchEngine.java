@@ -12,8 +12,6 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -25,6 +23,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexReader;
+
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
@@ -74,7 +73,7 @@ public class SearchEngine {
 	final private  String INDEX_METRIC_UNPARSABLE_CT = "numberOfUnparsableFiles";
         
         /*Need to set this when using a new computer*/
-	final private  String PROJECT_FILE_LOCATION = "/Users/brettwalker/workspace/EclipseJava/Lucene-Search-Engine/";
+	final private  String PROJECT_FILE_LOCATION = "/Users/brettwalker/workspace/netbeans/Lucene-Search-Engine-Web/";
 	
 	private enum operation { INDEX, SEARCH, PRINT_INDEX, PRINT_METRICS }  
 	private int numberOfUnparsableFiles = 0;
@@ -182,8 +181,10 @@ public class SearchEngine {
                                 //catch(IllegalArgumentException e)
                                 catch(Exception e)
                                 {
-                                    out.println("***ILLEGAL ARGUMENTS FOUND***: " + e.getMessage());
+                                    out.println("<br>***ILLEGAL ARGUMENTS FOUND***: " + e.getMessage());
                                     numberOfUnparsableFiles++;
+                                    
+                                    out.print(e.getStackTrace());
                                 }
                             }
                         }
@@ -389,7 +390,7 @@ public class SearchEngine {
             newDoc.add(new Field("inlink", Integer.toString(inlink_int), type));
             
             //Set url in newDoc
-            newDoc.add(new Field("url"), doc.get("url"), type);
+            newDoc.add(new Field("url", doc.get("url"), type));
 
             //Delete existing doc before adding new one
             Term term = new Term(uniqueField, uniqueID);
@@ -418,7 +419,7 @@ public class SearchEngine {
         Query q = queryParser.parse(query_string);
 
         int hitsPerPage = 10;
-        IndexReader reader = new IndexReader(index);
+        IndexReader reader = DirectoryReader.open(index);
         IndexSearcher searcher = new IndexSearcher(reader);
         TopDocs docs = searcher.search(q, hitsPerPage);
         ScoreDoc[] hits = docs.scoreDocs;
@@ -549,7 +550,7 @@ public class SearchEngine {
 			doc.add(new Field("url", url, type));
                         
                         //inlink field representing number of times doc has alink from another doc pointing to it. Initialized to 0
-                        doc.add(new Field("inlink", 0, type));
+                        doc.add(new Field("inlink", "0", type));
 			
                         
                         w.addDocument(doc);
