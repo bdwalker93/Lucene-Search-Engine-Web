@@ -27,6 +27,7 @@ import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 
@@ -35,6 +36,7 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 
 import org.apache.lucene.search.IndexSearcher;
 
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
@@ -326,6 +328,104 @@ public class SearchEngine {
 		}
 	}
 	
+        private static void boostDoc(IndexWriter w, Document doc, String uniqueField, String uniqueID) throws IOException, ParseException{
+            //{"title":15, "important":1, "heading1-heading6":5, "content":1, "url", "inlinks_count"}
+            
+            float iterativeBoost = (float)1.05;
+
+            //Get inlink count from doc, change to int value for later use and increment by 1
+            String inlink = doc.get("inlink");
+            int inlink_int = Integer.valueOf(inlink);
+            inlink_int = inlink_int + 1;
+
+
+            //doc object to be put into index and field type object for fields that can queried against
+            Document newDoc = new Document();
+            Field field = null;
+            FieldType type = new FieldType();
+            type.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+            type.setStored(true); 
+            type.setStoreTermVectors(true);
+            type.setTokenized(true);
+
+            //Set title field in newDoc
+            String title = doc.get("title");
+            field = new Field("title", title, type);
+            int titleboost = 15;
+            field.setBoost(getNewBoost(inlink_int, titleboost, iterativeBoost));
+            newDoc.add(field);
+
+            //Set important field in newDoc
+            String importantText = doc.get("important");
+            field = new Field("important", importantText, type);
+            int importantboost = 1;
+            field.setBoost(getNewBoost(inlink_int, importantboost, iterativeBoost));
+            newDoc.add(field);
+            
+            //Set content field in newDoc
+            String contentText = doc.get("content");
+            field = new Field("content", contentText, type);
+            int contentBoost = 1;
+            field.setBoost(getNewBoost(inlink_int, contentBoost, iterativeBoost));
+            newDoc.add(field);
+            
+            //Set header fields in newDoc
+            for(int i = 0; i<6; i++){
+                String headerTag = "heading" + i; //Set as [header0 - header6] according to addDoc
+                String headerText = doc.get(headerTag);
+                field = new Field(headerTag, headerText, type);
+                int headerBoost = 5;
+                field.setBoost(getNewBoost(inlink_int, headerBoost, iterativeBoost));
+                newDoc.add(field);
+            }
+
+            //create fieldType for fields that should not be queried against
+            type = new FieldType();
+            type.setStored(true);
+            type.setTokenized(false);
+            type.setStoreTermVectors(false);
+            
+            //Set inlink_count in newDoc
+            newDoc.add(new Field("inlink", Integer.toString(inlink_int), type));
+            
+            //Set url in newDoc
+            newDoc.add(new Field("url"), doc.get("url"), type);
+
+            //Delete existing doc before adding new one
+            Term term = new Term(uniqueField, uniqueID);
+            w.deleteDocuments(term);
+
+            //Add in new doc and commit changes
+            w.addDocument(newDoc);
+            w.commit();
+        }
+    
+    private static float getNewBoost(int inlink_count, float fieldBoost, float iterativeBoost){
+    	float newBoost = fieldBoost;
+    	
+    	for(int i = 0; i<inlink_count; i++){
+    		newBoost *= iterativeBoost;
+    	}
+    	
+    	return newBoost;
+    }
+    
+    private static Document getDoc(Directory index, String field_name, String text) throws IOException, ParseException{
+    	QueryParser queryParser = new QueryParser("title", new StandardAnalyzer());
+
+    	String query_string = field_name + ":" + text;
+        
+        Query q = queryParser.parse(query_string);
+
+        int hitsPerPage = 10;
+        IndexReader reader = new IndexReader(index);
+        IndexSearcher searcher = new IndexSearcher(reader);
+        TopDocs docs = searcher.search(q, hitsPerPage);
+        ScoreDoc[] hits = docs.scoreDocs;
+        
+        return searcher.doc(hits[0].doc); //Should only be 1 result if done correctly
+    }
+        
 	/* Adds a new document to to the index.
 	 *
 	 * Use the following link for setting up help with increasing the scoring of certain terms:
@@ -380,6 +480,7 @@ public class SearchEngine {
 			field = new Field("title", title, type);
 			field.setBoost(15); //Set weight for the field when query matches to string in field here
 			doc.add(field);
+                        
 		}
 		
 		if(PRINT_INDEX_TO_PARSING)
@@ -446,15 +547,19 @@ public class SearchEngine {
 			type.setTokenized(false);
 			type.setStoreTermVectors(false);
 			doc.add(new Field("url", url, type));
+                        
+                        //inlink field representing number of times doc has alink from another doc pointing to it. Initialized to 0
+                        doc.add(new Field("inlink", 0, type));
 			
-			w.addDocument(doc);
-			
+                        
+                        w.addDocument(doc);
 			return 0;
 		}
 		
 		return -1;
 	}
 	
+        
 	
 	/*
 	Will iterate through all documents held within the index and append to a map with key representing the term and value being all documents that have
