@@ -167,7 +167,8 @@ public class SearchEngine {
                             // Traverse our bookeeping JSON file that has all of the paths of the files for us to index
                             for(int i = 0; i < nameArr.length() && (i < REAL_FILE_INDEX_LIMIT || REAL_FILE_INDEX_LIMIT == -1); i++)
                             {
-//                                out.println("<br>Currently Parsing #" + (i + 1) + " : WEBPAGES_RAW/" + (String)nameArr.get(i) + (GET_CONTENT_URL ? " -- This is the URL: " + jsonObj.getString((String)nameArr.get(i)) : ""));
+                                if(i % 100 == 0)
+                                    out.println("<br>Currently Parsing #" + (i + 1) + " : WEBPAGES_RAW/" + (String)nameArr.get(i) + (GET_CONTENT_URL ? " -- This is the URL: " + jsonObj.getString((String)nameArr.get(i)) : ""));
                                 
                                 inputFile = new File(PROJECT_FILE_LOCATION + "WEBPAGES_RAW/" + (String)nameArr.get(i));
                                 
@@ -182,9 +183,7 @@ public class SearchEngine {
                                 catch(Exception e)
                                 {
                                     out.println("<br>***ILLEGAL ARGUMENTS FOUND***: " + e.getMessage());
-                                    numberOfUnparsableFiles++;
-                                    
-                                    out.print(e.getStackTrace());
+                                    numberOfUnparsableFiles++;                                    
                                 }
                             }
                         }
