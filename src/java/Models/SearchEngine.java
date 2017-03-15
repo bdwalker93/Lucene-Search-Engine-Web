@@ -255,12 +255,13 @@ public class SearchEngine {
                         int docId = hits[i].doc;
                         Document d = indexSearcher.doc(docId);
                         
-                        String resultTitle = (i + 1) + ". " + d.get("title"); 
+                        String resultTitle = d.get("title"); 
                         String urlToPage = d.get("url");
                         String hitScore = String.valueOf(hits[i].score);
                         
                         // Need to use the "//" before the url to show its not relative
-                        out.print("<li style='list-style-type: none'>" + "<a href=\"//" + urlToPage + "\">" + resultTitle + "</a>" + "</li>");
+                        out.print("<li style='padding-bottom: 10px; list-style-type: none'>" + "<span style='float: left; width: 20px'><span  style='float: right'>" + (i + 1) + ".</span></span>" + 
+                                "<span><a style='text-decoration: none; padding: 20px' href=\"//" + urlToPage + "\">" + resultTitle + "</a>" + "</span></li>");
                         
                     }
                     
