@@ -192,9 +192,13 @@ public class SearchEngine {
 //				 //crista lopes home page
 //				 inputFile = new File("WEBPAGES_RAW/51/46"); 
 //				 addDoc(w, "www2", inputFile);
+//                            
+//                            //for crista lopes new article
+//                            inputFile = new File("WEBPAGES_RAW/57/392");
+//                            addDoc(w, "www2", inputFile);
                             
                             //for crista lopes new article
-                            inputFile = new File("WEBPAGES_RAW/57/392");
+                            inputFile = new File("WEBPAGES_RAW/39/373");
                             addDoc(w, "www2", inputFile);
                         }
                         
@@ -348,7 +352,7 @@ public class SearchEngine {
 			 reader.close();  
 		}
 		catch(Exception e){
-			System.out.println("There was some exception thrown during printing: " + e.getStackTrace());
+			System.out.println("There was some exception thrown during index printing: " + e.getMessage());
 		}
 	}
 	
@@ -457,10 +461,8 @@ public class SearchEngine {
 	 * */
 	private int addDoc(IndexWriter w, String url, File file) throws IOException, IllegalArgumentException {
 		
-		//TODO: needs to be able to parse HTML pages here
 		//File parsing
 		org.jsoup.nodes.Document html = Jsoup.parse(String.join("",Files.readAllLines(file.toPath())));
-		
 		//If we cant parse the html
 		if(html == null)
 			return -1;

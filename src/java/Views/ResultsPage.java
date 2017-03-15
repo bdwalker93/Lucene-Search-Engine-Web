@@ -42,7 +42,7 @@ public class ResultsPage extends HttpServlet {
             out.println("<title>Servlet ResultsPage</title>");            
             out.println("</head>");
             out.println("<body>");
-            out.println("<form action=\"action_page.php\" method=\"get\">\n" +
+            out.println("<form action=\"MainSearchPage\" method=\"get\">\n" +
                         "  <input type=\"submit\" value=\"Back to Search\">\n" +
                         "</form>");
             //Query call
