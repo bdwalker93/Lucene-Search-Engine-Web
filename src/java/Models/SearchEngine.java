@@ -196,7 +196,7 @@ public class SearchEngine {
 //                        }
                         
                         //Bost all docs that were linked to 
-//                        handleBoost(w, index, inlinks);
+                        handleBoost(w, index, inlinks);
                         
                         //Close or commit IndexWriter to push changes for IndexReader
                         w.close();
@@ -259,9 +259,13 @@ public class SearchEngine {
                         String urlToPage = d.get("url");
                         String hitScore = String.valueOf(hits[i].score);
                         
+                        if(resultTitle == null)
+                            resultTitle = "No Site Title";
+                        
+                        
                         // Need to use the "//" before the url to show its not relative
                         out.print("<li style='padding-bottom: 10px; list-style-type: none'>" + "<span style='float: left; width: 20px'><span  style='float: right'>" + (i + 1) + ".</span></span>" + 
-                                "<span><a style='text-decoration: none; padding: 20px' href=\"//" + urlToPage + "\">" + resultTitle + "</a>" + "</span></li>");
+                                "<span><a style='text-decoration: none; padding: 20px' href=\"//" + urlToPage + "\">" + resultTitle + "</a> (" + urlToPage.substring(0, 20) + ")" + "</span></li>");
                         
                     }
                     
