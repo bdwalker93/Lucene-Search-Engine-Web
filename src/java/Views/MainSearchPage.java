@@ -44,7 +44,7 @@ public class MainSearchPage extends HttpServlet {
             
             out.println("<form style='text-align: center; padding-top: 20px' action='ResultsPage' method='get'>\n" +
                         "  <div style='font-size: 19px;'>Search Query:</div>"
-                    +   "  <br> <input style='width: 95%; font-size: 20px' type='text' name='query'><br>\n" +
+                    +   "  <div style='padding-bottom: 10px; padding-top: 10px'> <input style='width: 95%; font-size: 20px' type='text' name='query'></div>\n" +
                         "  <input style='border: 1px solid #d8d6d6; background-color: white; border-radius: 5px; width: 151px; font-size: 18px;-webkit-appearance: none;' type='submit' value='Search'>\n" +
                         "</form>");
             
