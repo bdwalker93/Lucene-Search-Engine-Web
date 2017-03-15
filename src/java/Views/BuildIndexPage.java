@@ -46,7 +46,11 @@ public class BuildIndexPage extends HttpServlet {
             out.println("<body>");
             out.println("<h1>Search Engine Indexing Status</h1>");
             
+            //builds the index
             se.indexCorpus("index", out);
+            
+            //displays our metrics
+            se.printIndexMetrics("index", out);
             
             out.println("</body>");
             out.println("</html>");

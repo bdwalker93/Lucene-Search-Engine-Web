@@ -329,9 +329,22 @@ public class SearchEngine {
 	/* Prints the metrics of the index 
 	 * 
 	 * */
-	public void printIndexMetrics(Directory index, boolean printMetricsToScreen, boolean printMetricsToFile){
-		 
+	public void printIndexMetrics(String indexLocation, PrintWriter out){
 		try{
+                        Directory index = null;
+
+                        File indexFile = new File(PROJECT_FILE_LOCATION + indexLocation);
+
+                        //Check to make sure the index directory exists
+                        if(!indexFile.exists() || !indexFile.isDirectory())
+                        {
+                            out.print("Where is the index?!?");
+                            throw new NotFoundException("Index cannot be found!");
+                        }
+
+                        index = new SimpleFSDirectory(indexFile.toPath());
+
+                    
 			 //Creating our index
 			 IndexReader reader = DirectoryReader.open(index);
 			 
@@ -342,7 +355,8 @@ public class SearchEngine {
 
 			 //add the bad file metric... should probably just make this map global
 			 metrics.put(INDEX_METRIC_UNPARSABLE_CT, String.valueOf(numberOfUnparsableFiles));
-			 printMetrics(metrics, printMetricsToScreen, printMetricsToFile);
+                         
+			 printMetrics(metrics, out);
 	
 			 reader.close();  
 		}
@@ -623,7 +637,9 @@ public class SearchEngine {
 		 return hmap;
 	}
 	
-	
+	/*
+        ****************Needs to be fixed for UI*****
+        */
 	//Iterates through map and prints out as a postings as seen in lectures
 	private void printIndexMap(HashMap<String, HashSet<String>> hmap, boolean printToScreen, boolean printToFile){
 		
@@ -654,39 +670,17 @@ public class SearchEngine {
 		}
 	}
 	
-	public  void printMetrics(HashMap<String, String> metrics, boolean printMetricsToScreen, boolean printMetricsToFile){
-		if(printMetricsToScreen)
-		{
-			System.out.println("\nTotal number of flat (.cfs files) files storing the index: " + metrics.get(INDEX_METRIC_SIZE_COUNT_KEY));
-			System.out.println("Size of the complete index size: " + metrics.get(INDEX_METRIC_SIZE_KEY) +  " MB");
-			System.out.println("Total Unique Terms: " + metrics.get(INDEX_METRIC_UNIQUE_KEY));
-			System.out.println("Total number of documents: " + metrics.get(INDEX_METRIC_DOC_CT_KEY));
-			System.out.println("Total number of unparsable documents: " + metrics.get(INDEX_METRIC_UNPARSABLE_CT) );
+	public  void printMetrics(HashMap<String, String> metrics, PrintWriter out){
+            out.print("<h2>Index Metrics</h2>");
+            out.print("<ul>");
+                out.println("<li>Total number of flat (.cfs files) files storing the index: " + metrics.get(INDEX_METRIC_SIZE_COUNT_KEY) + "</li>");
+                out.println("<li>Size of the complete index size: " + metrics.get(INDEX_METRIC_SIZE_KEY) +  " MB" + "</li>");
+                out.println("<li>Total Unique Terms: " + metrics.get(INDEX_METRIC_UNIQUE_KEY) + "</li>");
+                out.println("<li>Total number of documents: " + metrics.get(INDEX_METRIC_DOC_CT_KEY) + "</li>");
+                out.println("<li>Total number of unparsable documents: " + metrics.get(INDEX_METRIC_UNPARSABLE_CT) + "</li>");		
+	    out.print("</ul>");
 
-		}
-	
-		if(printMetricsToFile)
-		{
-			try 
-			{
-				FileWriter writer = new FileWriter(HUMAN_READABLE_INDEX, true); //the true will append the new data
-				writer.write("\n");
-				writer.write("Total number of flat files (.cfs files) storing the index: " + metrics.get(INDEX_METRIC_SIZE_COUNT_KEY) + "\n");
-				writer.write("Size of the complete index size: " + metrics.get(INDEX_METRIC_SIZE_KEY) + " MB\n");
-				writer.write("Total Unique Terms: " + metrics.get(INDEX_METRIC_UNIQUE_KEY) + "\n");
-				writer.write("Total number of documents encountered: " + metrics.get(INDEX_METRIC_DOC_CT_KEY) + "\n");
-				writer.write("Total number of unparsable documents: " + metrics.get(INDEX_METRIC_UNPARSABLE_CT) + "\n");
-				
-				writer.close();
-			} 
-			catch (IOException e) 
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-		}
-	}
+        }
 
 	private HashMap<String, String> calculateMetrics(HashMap<String, HashSet<String>> hmap, IndexReader reader)
 	{
