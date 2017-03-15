@@ -70,8 +70,8 @@ public class SearchEngine {
 	final private  String INDEX_METRIC_UNPARSABLE_CT = "numberOfUnparsableFiles";
         
         /*Need to set this when using a new computer*/
-//	final private  String PROJECT_FILE_LOCATION = "/Users/brettwalker/workspace/netbeans/Lucene-Search-Engine-Web/";
-	final private  String PROJECT_FILE_LOCATION = "C:\\Users\\Brett\\Documents\\NetBeansProjects\\Lucene-Search-Engine-Web\\";
+	final private  String PROJECT_FILE_LOCATION = "/Users/brettwalker/workspace/netbeans/Lucene-Search-Engine-Web/";
+//	final private  String PROJECT_FILE_LOCATION = "C:\\Users\\Brett\\Documents\\NetBeansProjects\\Lucene-Search-Engine-Web\\";
 	
 	private enum operation { INDEX, SEARCH, PRINT_INDEX, PRINT_METRICS }  
 	private int numberOfUnparsableFiles = 0;

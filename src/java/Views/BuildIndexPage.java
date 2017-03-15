@@ -46,20 +46,22 @@ public class BuildIndexPage extends HttpServlet {
             out.println("<body>");
             
             //back button
-            out.println("<form action=\"MainSearchPage\" method=\"get\">\n" +
+            out.println("<form style='height: 24px; text-align: center;' action=\"MainSearchPage\" method=\"get\">\n" +
                         "  <input type=\"submit\" value=\"Back to Search\">\n" +
                         "</form>");
                         
-            out.println("<h1>Search Engine Indexing Status</h1>");
+            out.println("<h1 style='text-align: center; font-size 25px;'>Search Engine Indexing Status</h1>");
             
             boolean verbose = false;
             
             if(request.getParameter("verbose") != null && request.getParameter("verbose").equalsIgnoreCase("true"))
                 verbose = true;
-            
+                       
+            out.println("<div style='width: 100%; height: 50vh; overflow: scroll; border: 2px solid black;'>");
             //builds the index
             se.indexCorpus("index", out, verbose);
-            
+            out.println("</div>");
+
             //displays our metrics
             se.printIndexMetrics("index", out);
 
