@@ -47,7 +47,7 @@ public class ResultsPage extends HttpServlet {
                         "</form>");
             String query = request.getParameter("query");
             
-            out.print("<h2>Searching for the query \"" + (query == null ? "" : query) + "\"...</h2>");
+            out.print("<h1 style='text-align: center' >Searching for the query \"" + (query == null ? "" : "<span style='color: red'>" + query + "</span>") + "\"</h1>");
 
             //Query call
             if(query != null && !query.isEmpty())

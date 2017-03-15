@@ -245,8 +245,8 @@ public class SearchEngine {
                     
                     ScoreDoc[] hits = docs.scoreDocs;
                     
-                    out.print("<p>Found " + hits.length + " hits.</p>");
-                    out.print("<p>Query Results</p>");
+                    out.print("<h3 style='text-align: center' >Query Results</h3>");
+                    out.print("<p style='text-align: center' >There were <span style='color: red'>" + hits.length + "</span> results found!</p>");
 
                     //beginning of results list
                     out.print("<ul>");
@@ -260,7 +260,7 @@ public class SearchEngine {
                         String hitScore = String.valueOf(hits[i].score);
                         
                         // Need to use the "//" before the url to show its not relative
-                        out.print("<li>" + "<a href=\"//" + urlToPage + "\">" + resultTitle + "</a>" + "</li>");
+                        out.print("<li style='list-style-type: none'>" + "<a href=\"//" + urlToPage + "\">" + resultTitle + "</a>" + "</li>");
                         
                     }
                     
