@@ -265,7 +265,7 @@ public class SearchEngine {
                         
                         // Need to use the "//" before the url to show its not relative
                         out.print("<li style='padding-bottom: 10px; list-style-type: none'>" + "<span style='float: left; width: 20px'><span  style='float: right'>" + (i + 1) + ".</span></span>" + 
-                                "<span><a style='text-decoration: none; padding: 20px' href=\"//" + urlToPage + "\">" + resultTitle + "</a> (" + urlToPage.substring(0, 20) + ")" + "</span></li>");
+                                "<span><a style='text-decoration: none; padding: 20px' href=\"//" + urlToPage + "\">" + resultTitle + "</a> (" + (urlToPage.length() <= 40 ? urlToPage : urlToPage.substring(0, 40) + "...") + ")" + "</span></li>");
                         
                     }
                     
