@@ -41,13 +41,19 @@ public class MainSearchPage extends HttpServlet {
             out.println("<body>");
             out.println("<h1>Search Engine</h1>");
             
-            out.println("<form action=\"ResultsPage\" method=\"get\">\n" +
-                        "  Search Query: <input type=\"text\" name=\"query\"><br>\n" +
-                        "  <input type=\"submit\" value=\"Submit\">\n" +
+            out.println("<form action='ResultsPage' method='get'>\n" +
+                        "  Search Query: <input type='text' name='query'><br>\n" +
+                        "  <input type='submit' value='Submit'>\n" +
                         "</form>");
             
-            out.println("<form action=\"BuildIndexPage\" method=\"get\">\n" +
-                        "  <input type=\"submit\" value=\"Generate Index\">\n" +
+            out.println("<form action='BuildIndexPage' method='get'>\n" +
+                        "<input type='text' name='verbose' value='false' hidden>" +
+                        "  <input type='submit' value='Generate Index Quiet'>\n" +
+                        "</form>");
+            
+            out.println("<form action='BuildIndexPage' method='get'>\n" +
+                        "<input type='text' name='verbose' value='true' hidden>" +
+                        "<input type='submit' value='Generate Index Verbose'>\n" +
                         "</form>");
             
             out.println("</body>");

@@ -102,7 +102,7 @@ public class SearchEngine {
 		 PrintWriter out = new PrintWriter(System.out, true); 
 		 switch(op){
 			 case INDEX:
-				 se.indexCorpus("index", out);
+				 se.indexCorpus("index", out, false);
 				 se.printIndexMetrics("index",out);
 				 break;
 				 
@@ -115,7 +115,7 @@ public class SearchEngine {
 		 index.close();
 	}
 	
-	public void indexCorpus(String indexLocation, PrintWriter out){
+	public void indexCorpus(String indexLocation, PrintWriter out, boolean verbose){
 		out.println("***Beginning Indexing***<br>");
 
                 try{
@@ -157,8 +157,8 @@ public class SearchEngine {
                             // Traverse our bookeeping JSON file that has all of the paths of the files for us to index
                             for(int i = 0; i < nameArr.length() && (i < REAL_FILE_INDEX_LIMIT || REAL_FILE_INDEX_LIMIT == -1); i++)
                             {
-                                if(i % 1000 == 0)
-//                                    out.println("<br>Currently Parsing #" + (i + 1) + " : WEBPAGES_RAW/" + (String)nameArr.get(i) + (GET_CONTENT_URL ? " -- This is the URL: " + jsonObj.getString((String)nameArr.get(i)) : ""));
+                                if(verbose)
+                                    out.println("<br>Currently Parsing #" + (i + 1) + " : WEBPAGES_RAW/" + (String)nameArr.get(i) + (GET_CONTENT_URL ? " -- This is the URL: " + jsonObj.getString((String)nameArr.get(i)) : ""));
                                 
                                 inputFile = new File(PROJECT_FILE_LOCATION + "WEBPAGES_RAW/" + (String)nameArr.get(i));
                                 
@@ -167,14 +167,21 @@ public class SearchEngine {
                                     if(addDoc(w, jsonObj.getString((String)nameArr.get(i)), inputFile) == -1)
                                     {
                                         numberOfUnparsableFiles++;
+                                        if(verbose)
+                                            out.println("<br>***COULDNT BE ADDED TO DOC***(" + numberOfUnparsableFiles + ")");
+                                        
                                     }
                                 }
                                 //catch(IllegalArgumentException e)
                                 catch(Exception e)
                                 {
-                                    out.println("<br>***ILLEGAL ARGUMENTS FOUND***: " + e.getMessage());
-                                    numberOfUnparsableFiles++;                                    
+                                    numberOfUnparsableFiles++;  
+                                    if(verbose)
+                                        out.println("<br>***ILLEGAL ARGUMENTS FOUND***(" + numberOfUnparsableFiles + ") :" + e.getMessage());
                                 }
+                                
+                                //flush the buffer
+                                out.flush();
                             }
                         }
                         else
@@ -201,22 +208,7 @@ public class SearchEngine {
                 
                 out.println("<br>***Indexing Complete***");
 	}
-	
-	/* Reads user input to get search string
-	 * 
-	 * */
-	private String getSearchString(){
-		Scanner scanner = new Scanner(System.in);
-		String phrase = null;
 		
-		System.out.print("Please enter the search phrase: ");
-		phrase = scanner.nextLine();
-		
-		scanner.close();
-		
-		return phrase;
-	}
-	
 	/* Searches the passed index
 	 * 
 	 * */
@@ -454,30 +446,17 @@ public class SearchEngine {
 		if(html == null)
 			return -1;
 		
-		
-		if(PRINT_CONTENT_STRING)
-			System.out.println("***This is the body***\n" + String.join("",Files.readAllLines(file.toPath())));
-		
-		if(PRINT_CONTENT_BODY)
-			System.out.println("***This is the body***\n" + html.body());
-		
 		String content = null;
 		Element body = html.body();
 		
 		//Get the rest of the text in the body
 		if(body != null)
 			content = body.text();
-		
-		if(PRINT_CONTENT_TEXT)
-			System.out.println("***This is the BODY text***\n" + content);
 
 		String title = null;
 		Element head = html.head();
 		if(head != null)
 			title = head.text();
-		
-		if(PRINT_CONTENT_TEXT)
-			System.out.println("***This is the TITLE***\n" + title);
 				
 		//Document Creation
 		Document doc = new Document();
@@ -495,9 +474,6 @@ public class SearchEngine {
 			doc.add(field);
                         
 		}
-		
-		if(PRINT_INDEX_TO_PARSING)
-			System.out.println("This is title: " + title);
 
 		//Grab the important text tags
 		Elements importantTags = body.select("b, strong, em");
@@ -513,9 +489,6 @@ public class SearchEngine {
 			//We remove any content in these tags so there is no duplicate counting
 			importantTags.remove();
 		}
-		if(PRINT_INDEX_TO_PARSING)
-			System.out.println("This is Bolding: " + importantTags.text());
-
 		
 		//Grab all heading tags
 		Elements headingTags = body.select("h1, h2, h3, h4, h5, h6");
@@ -535,8 +508,6 @@ public class SearchEngine {
 				//We remove any content in these tags so there is no duplicate counting
 				hTags.remove();
 			}
-			if(PRINT_INDEX_TO_PARSING)
-				System.out.println("This is heading: " + headingNum + " - " + hTags.text());
 
 		}
 		
@@ -548,8 +519,7 @@ public class SearchEngine {
 			field.setBoost(1); 
 			doc.add(field);
 		}
-		if(PRINT_INDEX_TO_PARSING)
-			System.out.println("This is content: " + content);
+
 
 		//Need to make sure we have content before attempting to add a link to a document
 		if(doc.getFields().size() > 0)
