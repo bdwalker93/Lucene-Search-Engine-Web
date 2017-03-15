@@ -51,7 +51,7 @@ public class ResultsPage extends HttpServlet {
 
             //Query call
             if(query != null && !query.isEmpty())
-                se.searchIndex("index", query, out);
+                se.searchIndex("production/index", query, out);
                         
             out.println("</body>");
             out.println("</html>");
