@@ -43,21 +43,21 @@ public class MainSearchPage extends HttpServlet {
             out.println("<h3 style='text-align: center;     font-weight: normal; -webkit-margin-before: -1em;'>Powered by Lucene</h3>");
             
             out.println("<form style='text-align: center; padding-top: 20px' action='ResultsPage' method='get'>\n" +
-                        "  Search Query: "
-                    +   "  <br> <input style='width: 95%' type='text' name='query'><br>\n" +
+                        "  <div style='font-size: 19px;'>Search Query:</div>"
+                    +   "  <br> <input style='width: 95%; font-size: 20px' type='text' name='query'><br>\n" +
                         "  <input type='submit' value='Submit'>\n" +
                         "</form>");
             
-            out.print("<div style='border: 2px solid black'>");
-            out.print("<span style='text-align:center'>Dont touch these unless you want to rebuild the index</span>");
-            out.println("<form action='BuildIndexPage' method='get'>\n" +
+            out.print("<div style='border: 2px solid black; padding: 20px; margin: 100px;'>");
+            out.print("<div style='text-align:center'>***Dont touch these unless you want to rebuild the index***</div>");
+            out.println("<form style='text-align: center' action='BuildIndexPage' method='get'>\n" +
                         "<input type='text' name='verbose' value='false' hidden>" +
-                        "  <input type='submit' value='Generate Index Quiet'>\n" +
+                        "  <input style='width: 330px;' type='submit' value='Generate Index Quiet'>\n" +
                         "</form>");
             
-            out.println("<form action='BuildIndexPage' method='get'>\n" +
+            out.println("<form style='text-align: center' action='BuildIndexPage' method='get'>\n" +
                         "<input type='text' name='verbose' value='true' hidden>" +
-                        "<input type='submit' value='Generate Index Verbose'>\n" +
+                        "<input style='width: 330px;' type='submit' value='Generate Index Verbose'>\n" +
                         "</form>");
             out.print("</div>");
                     
