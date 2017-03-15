@@ -82,50 +82,37 @@ public class SearchEngine {
 	private int numberOfUnparsableFiles = 0;
 	
 	public static void main(String[] args) throws IOException, ParseException, Exception{		 		
-//		SearchEngine se = new SearchEngine();
-//		Directory index = null;
-//
-//		operation op = operation.INDEX;
-////		operation op = operation.SEARCH;
-//		
-//		File indexFile = new File(REAL_INDEX);
-//		 
-//		 //Check to make sure the index directory exists
-//		 if(!indexFile.isDirectory())
-//		 {
-//			indexFile.mkdir(); 
-//		 }
-//		
-//		 
-//		 index = new SimpleFSDirectory(indexFile.toPath());	
-//		 
-//		 switch(op){
-//			 case INDEX:
-//				 se.indexCorpus(index);
-//				 System.out.println("***INDEXING COMPLETE***");
-//				 se.printInvertedIndex(index, PRINT_INDEX_TO_SCREEN, PRINT_INDEX_TO_FILE);
-//
-//				 break;
-//				 
-//			 case SEARCH:
-//				 se.searchIndex(index);
-//				 break;
-//				 
-//			 case PRINT_INDEX:
-//				 se.printInvertedIndex(index, PRINT_INDEX_TO_SCREEN, PRINT_INDEX_TO_FILE);
-//				 break;
-//				 
-//			 case PRINT_METRICS:
-//				 se.printIndexMetrics(index, PRINT_METRIC_TO_SCREEN, PRINT_METRIC_TO_FILE);
-//				 break;
-//				 
-//			default:
-//				System.out.println("UNKNOWN OPERATION");
-//			 
-//		 }
-//		 
-//  
-//		 index.close();
+		SearchEngine se = new SearchEngine();
+		Directory index = null;
+
+		operation op = operation.INDEX;
+//		operation op = operation.SEARCH;
+		
+		File indexFile = new File(REAL_INDEX);
+		 
+		 //Check to make sure the index directory exists
+		 if(!indexFile.isDirectory())
+		 {
+			indexFile.mkdir(); 
+		 }
+		
+		 
+		 index = new SimpleFSDirectory(indexFile.toPath());	
+		 
+		 switch(op){
+			 case INDEX:
+				 se.indexCorpus("index", new PrintWriter(System.out));
+				 se.printInvertedIndex(index, PRINT_INDEX_TO_SCREEN, PRINT_INDEX_TO_FILE);
+
+				 break;
+				 
+			default:
+				System.out.println("UNKNOWN OPERATION");
+			 
+		 }
+		 
+  
+		 index.close();
 	}
 	
 	public void indexCorpus(String indexLocation, PrintWriter out){
@@ -170,7 +157,7 @@ public class SearchEngine {
                             // Traverse our bookeeping JSON file that has all of the paths of the files for us to index
                             for(int i = 0; i < nameArr.length() && (i < REAL_FILE_INDEX_LIMIT || REAL_FILE_INDEX_LIMIT == -1); i++)
                             {
-                                if(i % 100 == 0)
+                                if(i % 500 == 0)
                                     out.println("<br>Currently Parsing #" + (i + 1) + " : WEBPAGES_RAW/" + (String)nameArr.get(i) + (GET_CONTENT_URL ? " -- This is the URL: " + jsonObj.getString((String)nameArr.get(i)) : ""));
                                 
                                 inputFile = new File(PROJECT_FILE_LOCATION + "WEBPAGES_RAW/" + (String)nameArr.get(i));
@@ -673,11 +660,13 @@ public class SearchEngine {
 	public  void printMetrics(HashMap<String, String> metrics, PrintWriter out){
             out.print("<h2>Index Metrics</h2>");
             out.print("<ul>");
-                out.println("<li>Total number of flat (.cfs files) files storing the index: " + metrics.get(INDEX_METRIC_SIZE_COUNT_KEY) + "</li>");
-                out.println("<li>Size of the complete index size: " + metrics.get(INDEX_METRIC_SIZE_KEY) +  " MB" + "</li>");
-                out.println("<li>Total Unique Terms: " + metrics.get(INDEX_METRIC_UNIQUE_KEY) + "</li>");
-                out.println("<li>Total number of documents: " + metrics.get(INDEX_METRIC_DOC_CT_KEY) + "</li>");
-                out.println("<li>Total number of unparsable documents: " + metrics.get(INDEX_METRIC_UNPARSABLE_CT) + "</li>");		
+            
+            //list contents
+            out.println("<li>Total number of flat (.cfs files) files storing the index: " + metrics.get(INDEX_METRIC_SIZE_COUNT_KEY) + "</li>");
+            out.println("<li>Size of the complete index size: " + metrics.get(INDEX_METRIC_SIZE_KEY) +  " MB" + "</li>");
+            out.println("<li>Total Unique Terms: " + metrics.get(INDEX_METRIC_UNIQUE_KEY) + "</li>");
+            out.println("<li>Total number of documents: " + metrics.get(INDEX_METRIC_DOC_CT_KEY) + "</li>");
+            out.println("<li>Total number of unparsable documents: " + metrics.get(INDEX_METRIC_UNPARSABLE_CT) + "</li>");		
 	    out.print("</ul>");
 
         }
