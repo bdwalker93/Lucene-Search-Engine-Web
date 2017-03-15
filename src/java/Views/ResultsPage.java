@@ -6,6 +6,7 @@ package Views;
  * and open the template in the editor.
  */
 
+import Models.SearchEngine;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -30,6 +31,8 @@ public class ResultsPage extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        SearchEngine se = new SearchEngine();
+        
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
@@ -39,7 +42,10 @@ public class ResultsPage extends HttpServlet {
             out.println("<title>Servlet ResultsPage</title>");            
             out.println("</head>");
             out.println("<body>");
-            out.println("This is our query value: " + request.getParameter("query"));
+            
+            //Query call
+            se.searchIndex("index", request.getParameter("query"), out);
+                        
             out.println("</body>");
             out.println("</html>");
         }

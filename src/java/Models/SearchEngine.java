@@ -12,6 +12,9 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.ws.rs.NotFoundException;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -61,7 +64,7 @@ public class SearchEngine {
 	final private  boolean PRINT_CONTENT_TEXT = false;
 
 	final private  boolean USE_REAL_FILES = true;
-	final private  int REAL_FILE_INDEX_LIMIT = -1;
+	final private  int REAL_FILE_INDEX_LIMIT = 10000;
 	
 	final private static  String REAL_INDEX = "index";
 	final private  String HUMAN_READABLE_INDEX = "index.txt";
@@ -242,47 +245,63 @@ public class SearchEngine {
 	/* Searches the passed index
 	 * 
 	 * */
-	public void searchIndex(Directory index) throws Exception{
-		String searchString = getSearchString();
-		
-		System.out.println("Searching for '" + searchString + "'");
+	public void searchIndex(String indexLocation, String searchString, PrintWriter out){
+                try {
+                    
+                    out.print("<h2>Searching for the query \"" + searchString + "\"...</h2>");
+                    
+                    Directory index = null;
+                    
+                    File indexFile = new File(PROJECT_FILE_LOCATION + indexLocation);
+                    
+                    //Check to make sure the index directory exists
+                    if(!indexFile.exists() || !indexFile.isDirectory())
+                    {
+                        out.print("Where is the index?!?");
+                        throw new NotFoundException("Index cannot be found!");
+                    }
+                    
+                    index = new SimpleFSDirectory(indexFile.toPath());
 
-		IndexReader indexReader = DirectoryReader.open(index);
-		IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+                    IndexReader indexReader = DirectoryReader.open(index);
+                    
+                    IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+                    
+                    Analyzer analyzer = new StandardAnalyzer();
 
-		Analyzer analyzer = new StandardAnalyzer();
-		
-		String query_string = "title:" + searchString +  " OR content:" + searchString +  "OR important:" + searchString  + "OR h1:" + searchString +
-				"OR h2:" + searchString + "OR h3:" + searchString + "OR h4:" + searchString + "OR h5:" + searchString + "OR h6:" + searchString;
-		QueryParser queryParser = new QueryParser("title", analyzer);
-		
-		TopDocs docs = indexSearcher.search(queryParser.parse(query_string), 10);
-		
-		
-//		String[] fields = {"content", "title", "important", "h1", "h2", "h3", "h4", "h5", "h6"};
-//		BooleanClause.Occur[] flags = 
-//		{
-//			BooleanClause.Occur.SHOULD,
-//			BooleanClause.Occur.SHOULD,
-//			BooleanClause.Occur.SHOULD,
-//			BooleanClause.Occur.SHOULD,
-//			BooleanClause.Occur.SHOULD,
-//			BooleanClause.Occur.SHOULD,
-//			BooleanClause.Occur.SHOULD,
-//			BooleanClause.Occur.SHOULD,
-//			BooleanClause.Occur.SHOULD,
-//         };
-//		
-//		TopDocs docs = indexSearcher.search(MultiFieldQueryParser.parse(searchString, fields, flags, analyzer), 10);
+                    String query_string = "title:" + searchString +  " OR content:" + searchString +  "OR important:" + searchString  + "OR h1:" + searchString +
+                            "OR h2:" + searchString + "OR h3:" + searchString + "OR h4:" + searchString + "OR h5:" + searchString + "OR h6:" + searchString;
+                    QueryParser queryParser = new QueryParser("title", analyzer);
+                    
+                    TopDocs docs = indexSearcher.search(queryParser.parse(query_string), 10);
+                    
+                    ScoreDoc[] hits = docs.scoreDocs;
+                    
+                    out.print("<p>Found " + hits.length + " hits.</p>");
+                    out.print("<p>Query Results</p>");
 
-		ScoreDoc[] hits = docs.scoreDocs;
+                    //beginning of results list
+                    out.print("<ul>");
 
-	    System.out.println("Found " + hits.length + " hits.");
-	    for(int i=0;i<hits.length;++i) {
-	    	int docId = hits[i].doc;
-	        Document d = indexSearcher.doc(docId);
-	        System.out.println((i + 1) + ". " + d.get("title") + "\t" + d.get("url") + "\t" + hits[i].score);
-	     }
+                    for(int i=0;i<hits.length;++i) {
+                        int docId = hits[i].doc;
+                        Document d = indexSearcher.doc(docId);
+                        
+                        String individualResult = (i + 1) + ". " + d.get("title") + "\t" + d.get("url") + "\t" + hits[i].score;
+                        out.print("<li>" + individualResult + "</li>");
+                        
+                    }
+                    
+                    //end of results list... should probably move into a finally
+                    out.print("/ul");
+
+                } 
+                catch (IOException ex) {
+                    out.print("<br> IO Exception: " + ex.getMessage());
+                } 
+                catch (ParseException ex) {
+                    out.print("<br> Parse Exception: " + ex.getMessage());
+                }
 	}
 	
 	/* Prints an inverted index of the corpus 
