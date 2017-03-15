@@ -51,7 +51,7 @@ public class BuildIndexPage extends HttpServlet {
             
             //displays our metrics
             se.printIndexMetrics("index", out);
-            
+
             out.println("</body>");
             out.println("</html>");
             

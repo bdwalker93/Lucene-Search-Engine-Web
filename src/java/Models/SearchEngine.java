@@ -157,8 +157,8 @@ public class SearchEngine {
                             // Traverse our bookeeping JSON file that has all of the paths of the files for us to index
                             for(int i = 0; i < nameArr.length() && (i < REAL_FILE_INDEX_LIMIT || REAL_FILE_INDEX_LIMIT == -1); i++)
                             {
-//                                if(i % 500 == 0)
-                                    out.println("<br>Currently Parsing #" + (i + 1) + " : WEBPAGES_RAW/" + (String)nameArr.get(i) + (GET_CONTENT_URL ? " -- This is the URL: " + jsonObj.getString((String)nameArr.get(i)) : ""));
+                                if(i % 1000 == 0)
+//                                    out.println("<br>Currently Parsing #" + (i + 1) + " : WEBPAGES_RAW/" + (String)nameArr.get(i) + (GET_CONTENT_URL ? " -- This is the URL: " + jsonObj.getString((String)nameArr.get(i)) : ""));
                                 
                                 inputFile = new File(PROJECT_FILE_LOCATION + "WEBPAGES_RAW/" + (String)nameArr.get(i));
                                 
@@ -180,22 +180,6 @@ public class SearchEngine {
                         else
                         {
                             //***TEST CODE***
-//				 inputFile = new File("SampleTextDoc.txt");
-//				 addDoc(w, "www1", inputFile);
-//
-//				 inputFile = new File("secondSampleTextDoc.txt"); 
-//				 addDoc(w, "www2", inputFile);
-//
-//				 inputFile = new File("WEBPAGES_RAW/0/189"); 
-//				 addDoc(w, "www2", inputFile);
-//				 
-//				 //crista lopes home page
-//				 inputFile = new File("WEBPAGES_RAW/51/46"); 
-//				 addDoc(w, "www2", inputFile);
-//                            
-//                            //for crista lopes new article
-//                            inputFile = new File("WEBPAGES_RAW/57/392");
-//                            addDoc(w, "www2", inputFile);
                             
                             //for crista lopes new article
                             inputFile = new File("WEBPAGES_RAW/39/373");
@@ -335,24 +319,27 @@ public class SearchEngine {
 
                         index = new SimpleFSDirectory(indexFile.toPath());
 
-                    
 			 //Creating our index
 			 IndexReader reader = DirectoryReader.open(index);
-			 
+
+                         
 			 //Need this map for metrics
 			 HashMap<String, HashSet<String>> hmap = convertIndexToMap(reader);
-			 
+
+                         
 			 HashMap<String, String> metrics = calculateMetrics(hmap, reader); 
 
+                         
 			 //add the bad file metric... should probably just make this map global
 			 metrics.put(INDEX_METRIC_UNPARSABLE_CT, String.valueOf(numberOfUnparsableFiles));
+
                          
 			 printMetrics(metrics, out);
 	
 			 reader.close();  
 		}
-		catch(Exception e){
-			System.out.println("There was some exception thrown during index printing: " + e.getMessage());
+		catch(IOException e){
+			out.println("There was some exception thrown during index printing: " + e.getMessage());
 		}
 	}
 	
@@ -677,18 +664,18 @@ public class SearchEngine {
 	{
 		double totalIndexSize = 0;
 		int numOfCfsFiles = 0;
-		
-		File indexFile = new File(REAL_INDEX);
-		 	
+
+		File indexFile = new File(PROJECT_FILE_LOCATION + REAL_INDEX);
+                
 		 for(File file : indexFile.listFiles())
 		 {
-			 if(file.getName().endsWith(".cfs"))
-			 {
-				 numOfCfsFiles++;
-				 totalIndexSize += file.length() / (double)1024 / 1024;
-			 }
+                    if(file.getName().endsWith(".cfs"))
+                    {
+                            numOfCfsFiles++;
+                            totalIndexSize += file.length() / (double)1024 / 1024;
+                    }
 		 }
-		 
+
 		 //Puts the metric results in a hashmap
 		HashMap<String, String> results = new HashMap<>(); 
 		results.put(INDEX_METRIC_SIZE_KEY, String.format("%.2f", totalIndexSize));
