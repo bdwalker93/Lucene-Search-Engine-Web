@@ -41,12 +41,17 @@ public class ResultsPage extends HttpServlet {
             out.println("<head>");
             out.println("<title>Servlet ResultsPage</title>");            
             out.println("</head>");
-            out.println("<body>");
-            out.println("<form action=\"MainSearchPage\" method=\"get\">\n" +
-                        "  <input type=\"submit\" value=\"Back to Search\">\n" +
+            out.println("<body style='background-color: #f3f1f1;'>");
+            out.println("<form style='text-align: center' action=\"MainSearchPage\" method=\"get\">\n" +
+                        "  <input style='border: 1px solid #d8d6d6; background-color: white; border-radius: 5px; width: 151px; font-size: 18px;' type=\"submit\" value=\"Back to Search\">\n" +
                         "</form>");
+            String query = request.getParameter("query");
+            
+            out.print("<h2>Searching for the query \"" + (query == null ? "" : query) + "\"...</h2>");
+
             //Query call
-            se.searchIndex("index", request.getParameter("query"), out);
+            if(query != null && !query.isEmpty())
+                se.searchIndex("index", query, out);
                         
             out.println("</body>");
             out.println("</html>");

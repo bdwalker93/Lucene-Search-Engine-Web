@@ -217,10 +217,7 @@ public class SearchEngine {
 	 * 
 	 * */
 	public void searchIndex(String indexLocation, String searchString, PrintWriter out){
-                try {
-                    
-                    out.print("<h2>Searching for the query \"" + searchString + "\"...</h2>");
-                    
+                try {                   
                     Directory index = null;
                     
                     File indexFile = new File(PROJECT_FILE_LOCATION + indexLocation);
