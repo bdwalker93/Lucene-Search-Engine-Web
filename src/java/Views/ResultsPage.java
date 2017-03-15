@@ -42,7 +42,6 @@ public class ResultsPage extends HttpServlet {
             out.println("<title>Servlet ResultsPage</title>");            
             out.println("</head>");
             out.println("<body>");
-            
             //Query call
             se.searchIndex("index", request.getParameter("query"), out);
                         

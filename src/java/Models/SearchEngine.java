@@ -287,8 +287,12 @@ public class SearchEngine {
                         int docId = hits[i].doc;
                         Document d = indexSearcher.doc(docId);
                         
-                        String individualResult = (i + 1) + ". " + d.get("title") + "\t" + d.get("url") + "\t" + hits[i].score;
-                        out.print("<li>" + individualResult + "</li>");
+                        String resultTitle = (i + 1) + ". " + d.get("title"); 
+                        String urlToPage = d.get("url");
+                        String hitScore = String.valueOf(hits[i].score);
+                        
+                        // Need to use the "//" before the url to show its not relative
+                        out.print("<li>" + "<a href=\"//" + urlToPage + "\">" + resultTitle + "</a>" + "</li>");
                         
                     }
                     
