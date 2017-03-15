@@ -43,11 +43,11 @@ public class BuildIndexPage extends HttpServlet {
             out.println("<head>");
             out.println("<title>Build Status</title>");            
             out.println("</head>");
-            out.println("<body>");
+            out.println("<body style='background-color: #f3f1f1;'>");
             
             //back button
             out.println("<form style='height: 24px; text-align: center;' action=\"MainSearchPage\" method=\"get\">\n" +
-                        "  <input type=\"submit\" value=\"Back to Search\">\n" +
+                        "  <input style='border: 1px solid #d8d6d6; background-color: white; border-radius: 5px; width: 151px; font-size: 18px;' type=\"submit\" value=\"Back to Search\">\n" +
                         "</form>");
                         
             out.println("<h1 style='text-align: center; font-size 25px;'>Search Engine Indexing Status</h1>");

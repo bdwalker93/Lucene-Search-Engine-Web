@@ -45,11 +45,11 @@ public class MainSearchPage extends HttpServlet {
             out.println("<form style='text-align: center; padding-top: 20px' action='ResultsPage' method='get'>\n" +
                         "  <div style='font-size: 19px;'>Search Query:</div>"
                     +   "  <br> <input style='width: 95%; font-size: 20px' type='text' name='query'><br>\n" +
-                        "  <input type='submit' value='Submit'>\n" +
+                        "  <input style='border: 1px solid #d8d6d6; background-color: white; border-radius: 5px; width: 151px; font-size: 18px;-webkit-appearance: none;' type='submit' value='Search'>\n" +
                         "</form>");
             
             out.print("<div style='border: 2px solid black; padding: 20px; margin: 100px;'>");
-            out.print("<div style='text-align:center'>***Dont touch these unless you want to rebuild the index***</div>");
+            out.print("<div style='text-align:center; color: red'>***Don't touch these unless you want to rebuild the index***</div>");
             out.println("<form style='text-align: center' action='BuildIndexPage' method='get'>\n" +
                         "<input type='text' name='verbose' value='false' hidden>" +
                         "  <input style='width: 330px;' type='submit' value='Generate Index Quiet'>\n" +
