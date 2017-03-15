@@ -40,6 +40,7 @@ import org.apache.lucene.search.IndexSearcher;
 
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.SimpleFSDirectory;
@@ -189,6 +190,11 @@ public class SearchEngine {
                             addDoc(w, "www2", inputFile, inlinks);
                         }
                          
+//                        for(String key : inlinks.keySet())
+//                        {
+//                            out.print("<br>key: " + key + " value: " + inlinks.get(key));
+//                        }
+                        
                         //Bost all docs that were linked to 
 //                        handleBoost(w, index, inlinks);
                         
@@ -408,11 +414,8 @@ public class SearchEngine {
         }
 
         private Document getDoc(Directory index, String field_name, String text) throws IOException, ParseException{
-                QueryParser queryParser = new QueryParser("title", new StandardAnalyzer());
-
-                String query_string = field_name + ":" + text;
-
-                Query q = queryParser.parse(query_string);
+                Term term = new Term(field_name, text);
+                Query q = new TermQuery(term);
 
                 int hitsPerPage = 10;
                 IndexReader reader = DirectoryReader.open(index);
