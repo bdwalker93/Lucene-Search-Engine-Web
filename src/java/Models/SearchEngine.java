@@ -293,7 +293,7 @@ public class SearchEngine {
                     }
                     
                     //end of results list... should probably move into a finally
-                    out.print("/ul");
+                    out.print("</ul>");
 
                 } 
                 catch (IOException ex) {
