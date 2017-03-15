@@ -64,7 +64,7 @@ public class SearchEngine {
 	final private  boolean PRINT_CONTENT_TEXT = false;
 
 	final private  boolean USE_REAL_FILES = true;
-	final private  int REAL_FILE_INDEX_LIMIT = 10000;
+	final private  int REAL_FILE_INDEX_LIMIT = -1;
 	
 	final private static  String REAL_INDEX = "index";
 	final private  String HUMAN_READABLE_INDEX = "index.txt";
@@ -76,7 +76,8 @@ public class SearchEngine {
 	final private  String INDEX_METRIC_UNPARSABLE_CT = "numberOfUnparsableFiles";
         
         /*Need to set this when using a new computer*/
-	final private  String PROJECT_FILE_LOCATION = "/Users/brettwalker/workspace/netbeans/Lucene-Search-Engine-Web/";
+//	final private  String PROJECT_FILE_LOCATION = "/Users/brettwalker/workspace/netbeans/Lucene-Search-Engine-Web/";
+	final private  String PROJECT_FILE_LOCATION = "C:\\Users\\Brett\\Documents\\NetBeansProjects\\Lucene-Search-Engine-Web\\";
 	
 	private enum operation { INDEX, SEARCH, PRINT_INDEX, PRINT_METRICS }  
 	private int numberOfUnparsableFiles = 0;
@@ -98,12 +99,11 @@ public class SearchEngine {
 		
 		 
 		 index = new SimpleFSDirectory(indexFile.toPath());	
-		 
+		 PrintWriter out = new PrintWriter(System.out, true); 
 		 switch(op){
 			 case INDEX:
-				 se.indexCorpus("index", new PrintWriter(System.out));
-				 se.printInvertedIndex(index, PRINT_INDEX_TO_SCREEN, PRINT_INDEX_TO_FILE);
-
+				 se.indexCorpus("index", out);
+				 se.printIndexMetrics("index",out);
 				 break;
 				 
 			default:
@@ -157,7 +157,7 @@ public class SearchEngine {
                             // Traverse our bookeeping JSON file that has all of the paths of the files for us to index
                             for(int i = 0; i < nameArr.length() && (i < REAL_FILE_INDEX_LIMIT || REAL_FILE_INDEX_LIMIT == -1); i++)
                             {
-                                if(i % 500 == 0)
+//                                if(i % 500 == 0)
                                     out.println("<br>Currently Parsing #" + (i + 1) + " : WEBPAGES_RAW/" + (String)nameArr.get(i) + (GET_CONTENT_URL ? " -- This is the URL: " + jsonObj.getString((String)nameArr.get(i)) : ""));
                                 
                                 inputFile = new File(PROJECT_FILE_LOCATION + "WEBPAGES_RAW/" + (String)nameArr.get(i));
@@ -260,7 +260,7 @@ public class SearchEngine {
                             "OR h2:" + searchString + "OR h3:" + searchString + "OR h4:" + searchString + "OR h5:" + searchString + "OR h6:" + searchString;
                     QueryParser queryParser = new QueryParser("title", analyzer);
                     
-                    TopDocs docs = indexSearcher.search(queryParser.parse(query_string), 10);
+                    TopDocs docs = indexSearcher.search(queryParser.parse(query_string), 999999999);
                     
                     ScoreDoc[] hits = docs.scoreDocs;
                     
