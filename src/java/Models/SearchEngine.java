@@ -51,13 +51,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class SearchEngine {
-    	final private static boolean PRINT_INDEX_TO_SCREEN = false;
-	final private static boolean PRINT_INDEX_TO_FILE = false;
-	final private static boolean PRINT_METRIC_TO_SCREEN = true;
-	final private static boolean PRINT_METRIC_TO_FILE = false;
-	
-	final private static boolean PRINT_INDEX_TO_PARSING = false;
-
 	final private  boolean GET_CONTENT_URL = false;
 	final private  boolean PRINT_CONTENT_STRING = false;
 	final private  boolean PRINT_CONTENT_BODY = false;
@@ -335,19 +328,132 @@ public class SearchEngine {
 		}
 	}
 	
-        private static void boostDoc(IndexWriter w, Document doc, String uniqueField, String uniqueID) throws IOException, ParseException{
-            //{"title":15, "important":1, "heading1-heading6":5, "content":1, "url", "inlinks_count"}
-            
-            float iterativeBoost = (float)1.05;
+        private void boostDoc(IndexWriter w, Document doc, String uniqueField, String uniqueID, int inlink_count) throws IOException, ParseException{
+                //{"title":2, "important":.2, "heading1-heading6":1, "content":.1, "url"}
 
-            //Get inlink count from doc, change to int value for later use and increment by 1
-            String inlink = doc.get("inlink");
-            int inlink_int = Integer.valueOf(inlink);
-            inlink_int = inlink_int + 1;
+                float iterativeBoost = (float)1.05;
+
+                //doc object to be put into index and field type object for fields that can queried against
+                Document newDoc = new Document();
+                Field field = null;
+                FieldType type = new FieldType();
+                type.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+                type.setStored(true); 
+                type.setStoreTermVectors(true);
+                type.setTokenized(true);
+
+                //Set title field in newDoc
+                String title = doc.get("title");
+                field = new Field("title", title, type);
+                float titleboost = (float)2;
+                field.setBoost(getNewBoost(inlink_count, titleboost, iterativeBoost));
+                newDoc.add(field);
+
+                //Set important field in newDoc
+                String importantText = doc.get("important");
+                field = new Field("important", importantText, type);
+                float importantboost = (float).2;
+                field.setBoost(getNewBoost(inlink_count, importantboost, iterativeBoost));
+                newDoc.add(field);
+
+                //Set content field in newDoc
+                String contentText = doc.get("content");
+                field = new Field("content", contentText, type);
+                float contentBoost = (float).1;
+                field.setBoost(getNewBoost(inlink_count, contentBoost, iterativeBoost));
+                newDoc.add(field);
+
+                //Set header fields in newDoc
+                for(int i = 0; i<6; i++){
+                        String headerTag = "heading" + i; //Set as [header0 - header6] according to addDoc
+                        String headerText = doc.get(headerTag);
+                        field = new Field(headerTag, headerText, type);
+                        float headerBoost = (float).5;
+                        field.setBoost(getNewBoost(inlink_count, headerBoost, iterativeBoost));
+                        newDoc.add(field);
+                }
+
+                //create fieldType for fields that should not be queried against
+                type = new FieldType();
+                type.setStored(true);
+                type.setTokenized(false);
+                type.setStoreTermVectors(false);
 
 
-            //doc object to be put into index and field type object for fields that can queried against
-            Document newDoc = new Document();
+                //Set url in newDoc
+                newDoc.add(new Field("url", doc.get("url"), type));
+
+                //Delete existing doc before adding new one
+                Term term = new Term(uniqueField, uniqueID);
+                w.deleteDocuments(term);
+
+                //Add in new doc and commit changes
+                w.addDocument(newDoc);
+                w.commit();
+        }
+
+        private float getNewBoost(int inlink_count, float fieldBoost, float iterativeBoost){
+                float newBoost = fieldBoost;
+
+                for(int i = 0; i<inlink_count; i++){
+                        newBoost *= iterativeBoost;
+                }
+
+                return newBoost;
+        }
+
+        private Document getDoc(Directory index, String field_name, String text) throws IOException, ParseException{
+                QueryParser queryParser = new QueryParser("title", new StandardAnalyzer());
+
+                String query_string = field_name + ":" + text;
+
+                Query q = queryParser.parse(query_string);
+
+                int hitsPerPage = 10;
+                IndexReader reader = DirectoryReader.open(index);
+                IndexSearcher searcher = new IndexSearcher(reader);
+                TopDocs docs = searcher.search(q, hitsPerPage);
+                ScoreDoc[] hits = docs.scoreDocs;
+
+                if(hits.length == 0)
+                        return null;
+                else
+                        return searcher.doc(hits[0].doc); //Should only be 1 result if done correctly
+        }
+
+        private void handleBoost(IndexWriter w, Directory index, HashMap<String, Integer> inlinks) throws IOException, ParseException{
+                Document doc;
+                for(String key: inlinks.keySet()){
+                        doc = getDoc(index, "url", key);
+                        if(doc == null)
+                                continue;
+                        else
+                                boostDoc(w, doc, "url", key, inlinks.get(key));
+                }
+
+        }
+        
+        private int addDoc(IndexWriter w, String url, File file) throws IOException, IllegalArgumentException {
+            //File parsing
+            org.jsoup.nodes.Document html = Jsoup.parse(String.join("",Files.readAllLines(file.toPath())));
+            //If we cant parse the html
+            if(html == null)
+                    return -1;
+
+            String content = null;
+            Element body = html.body();
+
+            //Get the rest of the text in the body
+            if(body != null)
+                    content = body.text();
+
+            String title = null;
+            Element head = html.head();
+            if(head != null)
+                    title = head.text();
+
+            //Document Creation
+            Document doc = new Document();
             Field field = null;
             FieldType type = new FieldType();
             type.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
@@ -355,194 +461,75 @@ public class SearchEngine {
             type.setStoreTermVectors(true);
             type.setTokenized(true);
 
-            //Set title field in newDoc
-            String title = doc.get("title");
-            field = new Field("title", title, type);
-            int titleboost = 15;
-            field.setBoost(getNewBoost(inlink_int, titleboost, iterativeBoost));
-            newDoc.add(field);
+            //If there is text in the head, it is probably a title
+            if(title != null && !title.isEmpty()){
+                    field = new Field("title", title, type);
+                    field.setBoost(2); //Set weight for the field when query matches to string in field here
+                    doc.add(field);
 
-            //Set important field in newDoc
-            String importantText = doc.get("important");
-            field = new Field("important", importantText, type);
-            int importantboost = 1;
-            field.setBoost(getNewBoost(inlink_int, importantboost, iterativeBoost));
-            newDoc.add(field);
-            
-            //Set content field in newDoc
-            String contentText = doc.get("content");
-            field = new Field("content", contentText, type);
-            int contentBoost = 1;
-            field.setBoost(getNewBoost(inlink_int, contentBoost, iterativeBoost));
-            newDoc.add(field);
-            
-            //Set header fields in newDoc
-            for(int i = 0; i<6; i++){
-                String headerTag = "heading" + i; //Set as [header0 - header6] according to addDoc
-                String headerText = doc.get(headerTag);
-                field = new Field(headerTag, headerText, type);
-                int headerBoost = 5;
-                field.setBoost(getNewBoost(inlink_int, headerBoost, iterativeBoost));
-                newDoc.add(field);
             }
 
-            //create fieldType for fields that should not be queried against
-            type = new FieldType();
-            type.setStored(true);
-            type.setTokenized(false);
-            type.setStoreTermVectors(false);
-            
-            //Set inlink_count in newDoc
-            newDoc.add(new Field("inlink", Integer.toString(inlink_int), type));
-            
-            //Set url in newDoc
-            newDoc.add(new Field("url", doc.get("url"), type));
+            //Grab the important text tags
+            Elements importantTags = body.select("b, strong, em");
 
-            //Delete existing doc before adding new one
-            Term term = new Term(uniqueField, uniqueID);
-            w.deleteDocuments(term);
+            if(importantTags != null && !importantTags.isEmpty())
+            {
+                    field = new Field("important", importantTags.html(), type);
 
-            //Add in new doc and commit changes
-            w.addDocument(newDoc);
-            w.commit();
+                    //Setting the bold tag boost
+                    field.setBoost((float).2); 
+                    doc.add(field);
+
+                    //We remove any content in these tags so there is no duplicate counting
+                    importantTags.remove();
+            }
+
+            //Grab all heading tags
+            Elements headingTags = body.select("h1, h2, h3, h4, h5, h6");
+
+            for(int headingNum = 0; headingNum < 6; headingNum++)
+            {
+                    //Attempt to index all the heading tags
+                    Elements hTags = headingTags.select("h" + (headingNum + 1));
+                    if(hTags != null && !hTags.isEmpty())
+                    {
+                            field = new Field("heading" + headingNum, hTags.html(), type);
+
+                            //Setting the heading tag boost
+                            field.setBoost(1); 
+                            doc.add(field);
+
+                            //We remove any content in these tags so there is no duplicate counting
+                            hTags.remove();
+                    }
+
+            }
+
+            //Need to parse the remaining content after all the important tags have been deleted 
+            if(content != null && !content.isEmpty()){
+                    field = new Field("content", content, type);
+
+                    //Setting the default boost
+                    field.setBoost((float).1); 
+                    doc.add(field);
+            }
+
+            //Need to make sure we have content before attempting to add a link to a document
+            if(doc.getFields().size() > 0)
+            {
+                    //fileID field should not be used for finding terms within document, only for uniquely identifying this doc amongst others in index
+                    type = new FieldType();
+                    type.setStored(true);
+                    type.setTokenized(false);
+                    type.setStoreTermVectors(false);
+                    doc.add(new Field("url", url, type));	
+
+                    w.addDocument(doc);
+                    return 0;
+            }
+
+            return -1;
         }
-    
-    private static float getNewBoost(int inlink_count, float fieldBoost, float iterativeBoost){
-    	float newBoost = fieldBoost;
-    	
-    	for(int i = 0; i<inlink_count; i++){
-    		newBoost *= iterativeBoost;
-    	}
-    	
-    	return newBoost;
-    }
-    
-    private static Document getDoc(Directory index, String field_name, String text) throws IOException, ParseException{
-    	QueryParser queryParser = new QueryParser("title", new StandardAnalyzer());
-
-    	String query_string = field_name + ":" + text;
-        
-        Query q = queryParser.parse(query_string);
-
-        int hitsPerPage = 10;
-        IndexReader reader = DirectoryReader.open(index);
-        IndexSearcher searcher = new IndexSearcher(reader);
-        TopDocs docs = searcher.search(q, hitsPerPage);
-        ScoreDoc[] hits = docs.scoreDocs;
-        
-        return searcher.doc(hits[0].doc); //Should only be 1 result if done correctly
-    }
-        
-	/* Adds a new document to to the index.
-	 *
-	 * Use the following link for setting up help with increasing the scoring of certain terms:
-	 * https://lucene.apache.org/core/3_5_0/scoring.html#Fields and Documents
-	 * */
-	private int addDoc(IndexWriter w, String url, File file) throws IOException, IllegalArgumentException {
-		
-		//File parsing
-		org.jsoup.nodes.Document html = Jsoup.parse(String.join("",Files.readAllLines(file.toPath())));
-		//If we cant parse the html
-		if(html == null)
-			return -1;
-		
-		String content = null;
-		Element body = html.body();
-		
-		//Get the rest of the text in the body
-		if(body != null)
-			content = body.text();
-
-		String title = null;
-		Element head = html.head();
-		if(head != null)
-			title = head.text();
-				
-		//Document Creation
-		Document doc = new Document();
-		Field field = null;
-		FieldType type = new FieldType();
-		type.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
-		type.setStored(true); 
-		type.setStoreTermVectors(true);
-		type.setTokenized(true);
-		
-		//If there is text in the head, it is probably a title
-		if(title != null && !title.isEmpty()){
-			field = new Field("title", title, type);
-			field.setBoost(15); //Set weight for the field when query matches to string in field here
-			doc.add(field);
-                        
-		}
-
-		//Grab the important text tags
-		Elements importantTags = body.select("b, strong, em");
-
-		if(importantTags != null && !importantTags.isEmpty())
-		{
-			field = new Field("important", importantTags.html(), type);
-			
-			//Setting the bold tag boost
-			field.setBoost(1); 
-			doc.add(field);
-			
-			//We remove any content in these tags so there is no duplicate counting
-			importantTags.remove();
-		}
-		
-		//Grab all heading tags
-		Elements headingTags = body.select("h1, h2, h3, h4, h5, h6");
-
-		for(int headingNum = 0; headingNum < 6; headingNum++)
-		{
-			//Attempt to index all the heading tags
-			Elements hTags = headingTags.select("h" + (headingNum + 1));
-			if(hTags != null && !hTags.isEmpty())
-			{
-				field = new Field("heading" + headingNum, hTags.html(), type);
-				
-				//Setting the heading tag boost
-				field.setBoost(5); 
-				doc.add(field);
-				
-				//We remove any content in these tags so there is no duplicate counting
-				hTags.remove();
-			}
-
-		}
-		
-		//Need to parse the remaining content after all the important tags have been deleted 
-		if(content != null && !content.isEmpty()){
-			field = new Field("content", content, type);
-			
-			//Setting the default boost
-			field.setBoost(1); 
-			doc.add(field);
-		}
-
-
-		//Need to make sure we have content before attempting to add a link to a document
-		if(doc.getFields().size() > 0)
-		{
-			//fileID field should not be used for finding terms within document, only for uniquely identifying this doc amongst others in index
-			type = new FieldType();
-			type.setStored(true);
-			type.setTokenized(false);
-			type.setStoreTermVectors(false);
-			doc.add(new Field("url", url, type));
-                        
-                        //inlink field representing number of times doc has alink from another doc pointing to it. Initialized to 0
-                        doc.add(new Field("inlink", "0", type));
-			
-                        
-                        w.addDocument(doc);
-			return 0;
-		}
-		
-		return -1;
-	}
-	
-        
 	
 	/*
 	Will iterate through all documents held within the index and append to a map with key representing the term and value being all documents that have

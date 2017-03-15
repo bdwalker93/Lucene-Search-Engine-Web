@@ -39,7 +39,8 @@ public class MainSearchPage extends HttpServlet {
             out.println("<title>INF 141 LUCENE SEARCH ENGINE</title>");            
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Search Engine</h1>");
+            out.println("<h1>INF 141: Search Engine</h1>");
+            out.println("<h3>Powered by Lucene</h3>");
             
             out.println("<form action='ResultsPage' method='get'>\n" +
                         "  Search Query: <input type='text' name='query'><br>\n" +
