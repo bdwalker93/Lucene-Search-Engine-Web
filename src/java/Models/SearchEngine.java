@@ -109,7 +109,10 @@ public class SearchEngine {
 	}
 	
 	public void indexCorpus(String indexLocation, PrintWriter out, boolean verbose){
-		out.println("***Beginning Indexing***<br>");
+	    //our map for link boosting
+            HashMap<String, Integer> inlinks = new HashMap<>();
+	
+            out.println("***Beginning Indexing***<br>");
 
                 try{
                     Directory index = null;
@@ -157,7 +160,7 @@ public class SearchEngine {
                                 
                                 try{
                                     
-                                    if(addDoc(w, jsonObj.getString((String)nameArr.get(i)), inputFile) == -1)
+                                    if(addDoc(w, jsonObj.getString((String)nameArr.get(i)), inputFile, inlinks) == -1)
                                     {
                                         numberOfUnparsableFiles++;
                                         if(verbose)
@@ -182,10 +185,12 @@ public class SearchEngine {
                             //***TEST CODE***
                             
                             //for crista lopes new article
-                            inputFile = new File("WEBPAGES_RAW/39/373");
-                            addDoc(w, "www2", inputFile);
+                            inputFile = new File(PROJECT_FILE_LOCATION + "WEBPAGES_RAW/5/218");
+                            addDoc(w, "www2", inputFile, inlinks);
                         }
-                        
+                         
+                        //Bost all docs that were linked to 
+//                        handleBoost(w, index, inlinks);
                         
                         //Close or commit IndexWriter to push changes for IndexReader
                         w.close();
@@ -433,24 +438,12 @@ public class SearchEngine {
 
         }
         
-        private int addDoc(IndexWriter w, String url, File file) throws IOException, IllegalArgumentException {
+        private int addDoc(IndexWriter w, String url, File file, HashMap<String, Integer> inlinks) throws IOException, IllegalArgumentException {
             //File parsing
             org.jsoup.nodes.Document html = Jsoup.parse(String.join("",Files.readAllLines(file.toPath())));
             //If we cant parse the html
             if(html == null)
                     return -1;
-
-            String content = null;
-            Element body = html.body();
-
-            //Get the rest of the text in the body
-            if(body != null)
-                    content = body.text();
-
-            String title = null;
-            Element head = html.head();
-            if(head != null)
-                    title = head.text();
 
             //Document Creation
             Document doc = new Document();
@@ -460,6 +453,13 @@ public class SearchEngine {
             type.setStored(true); 
             type.setStoreTermVectors(true);
             type.setTokenized(true);
+            
+            Element body = html.body();
+
+            String title = null;
+            Element head = html.head();
+            if(head != null)
+                    title = head.text();
 
             //If there is text in the head, it is probably a title
             if(title != null && !title.isEmpty()){
@@ -468,9 +468,31 @@ public class SearchEngine {
                     doc.add(field);
 
             }
-
+            
             //Grab the important text tags
-            Elements importantTags = body.select("b, strong, em");
+            Elements linkTags = null;
+            if(body != null)
+                linkTags = body.select("a");
+
+            if(linkTags != null && !linkTags.isEmpty())
+            {
+                for(Element e : linkTags)
+                {
+                    String extractedLink = e.absUrl("href");
+                    if(inlinks.containsKey(extractedLink)){
+                        inlinks.put(url, inlinks.get(extractedLink) + 1);
+                    }
+                    else
+                    {
+                        inlinks.put(url, 1);  
+                    }
+                }
+            }
+            
+            //Grab the important text tags
+            Elements importantTags = null;
+            if(body != null)
+                importantTags = body.select("b, strong, em");
 
             if(importantTags != null && !importantTags.isEmpty())
             {
@@ -485,12 +507,17 @@ public class SearchEngine {
             }
 
             //Grab all heading tags
-            Elements headingTags = body.select("h1, h2, h3, h4, h5, h6");
+            Elements headingTags = null;
+            if(body != null)
+                headingTags = body.select("h1, h2, h3, h4, h5, h6");
 
             for(int headingNum = 0; headingNum < 6; headingNum++)
             {
                     //Attempt to index all the heading tags
-                    Elements hTags = headingTags.select("h" + (headingNum + 1));
+                    Elements hTags = null;
+                    if(headingTags != null)
+                        hTags = headingTags.select("h" + (headingNum + 1));
+                    
                     if(hTags != null && !hTags.isEmpty())
                     {
                             field = new Field("heading" + headingNum, hTags.html(), type);
@@ -504,6 +531,11 @@ public class SearchEngine {
                     }
 
             }
+            
+            //Get the rest of the text in the body
+            String content = null;
+            if(body != null)
+                    content = body.text();
 
             //Need to parse the remaining content after all the important tags have been deleted 
             if(content != null && !content.isEmpty()){
